@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pies Coin Platform</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* Optional: Custom styles */
+        body {
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="mt-4">Create Your Own Token on Pies Coin Platform</h1>
+        <form id="tokenForm" class="mb-4">
+            <div class="form-group">
+                <input type="text" class="form-control" id="tokenName" placeholder="Token Name" required>
+            </div>
+            <div class="form-group">
+                <input type="text" class="form-control" id="tokenSymbol" placeholder="Token Symbol" required>
+            </div>
+            <div class="form-group">
+                <input type="number" class="form-control" id="tokenSupply" placeholder="Initial Supply" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Create Token</button>
+        </form>
+
+        <div id="tokensList">
+            <h2>Created Tokens:</h2>
+            <!-- Tokens list will be dynamically populated here -->
+        </div>
+    </div>
+
+    <!-- Bootstrap JS and Web3.js -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/web3/dist/web3.min.js"></script>
+    <script>
+        // Replace with actual ABI and contract address after deployment
+        const tokenFactoryABI = [
+            // ABI of TokenFactory contract
+        ];
+        const tokenFactoryAddress = '/* Deployed TokenFactory contract address */';
+
+        async function createToken() {
+            const web3 = new Web3(Web3.givenProvider || "http://localhost:8545");
+            const accounts = await web3.eth.requestAccounts();
+            const tokenName = document.getElementById('tokenName').value;
+            const tokenSymbol = document.getElementById('tokenSymbol').value;
+            const tokenSupply = document.getElementById('tokenSupply').value;
+
+            const tokenFactory = new web3.eth.Contract(tokenFactoryABI, tokenFactoryAddress);
+
+            // Call the smart contract function to create a new token
+            tokenFactory.methods.createToken(tokenName, tokenSymbol, tokenSupply)
+                .send({ from: accounts[0] })
+                .then((receipt) => {
+                    console.log('Token created:', receipt);
+                    listTokens();
+                })
+                .catch((error) => {
+                    console.error('Error creating token:', error);
+                });
+        }
+
+        async function listTokens() {
+            const web3 = new Web3(Web3.givenProvider || "http://localhost:8545");
+            const tokenFactory = new web3.eth.Contract(tokenFactoryABI, tokenFactoryAddress);
+
+            const tokens = await tokenFactory.methods.getTokens().call();
+            const tokensListDiv = document.getElementById('tokensList');
+            tokensListDiv.innerHTML = '<h2>Created Tokens:</h2>';
+
+            tokens.forEach(token => {
+                tokensListDiv.innerHTML += `<p>${token.name} (${token.symbol}) - ${token.contractAddress}</p>`;
+            });
+        }
+
+        document.getElementById('tokenForm').onsubmit = (event) => {
+            event.preventDefault();
+            createToken();
+        };
+
+        listTokens();
+    </script>
+</body>
+</html>
